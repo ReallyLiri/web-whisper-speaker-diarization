@@ -1,7 +1,5 @@
 import { useState, forwardRef, useRef, useImperativeHandle, useEffect, useCallback } from 'react';
 
-const EXAMPLE_URL = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/hopper.webm';
-
 const MediaInput = forwardRef(({ onInputChange, onTimeUpdate, isRunning = false, ...props }, ref) => {
     // UI states
     const [dragging, setDragging] = useState(false);
@@ -194,12 +192,6 @@ const MediaInput = forwardRef(({ onInputChange, onTimeUpdate, isRunning = false,
                         style={{ borderColor: dragging ? 'blue' : 'lightgray' }}
                     >
                         <span className="text-gray-600 text-center"><u>Drag & drop</u> or <u>click</u><br />to select media</span>
-                        <span className="text-gray-500 text-sm hover:text-gray-800 mt-2" onClick={async (e) => {
-                            e.stopPropagation();
-                            const buffer = await fetch(EXAMPLE_URL).then((r) => r.arrayBuffer());
-                            videoElement.current.src = URL.createObjectURL(new Blob([buffer], { type: 'video/mp4' }));
-                            onBufferLoad(buffer, 'video/mp4');
-                        }}>(or <u>try an example</u>)</span>
                     </div>
                 )
             }

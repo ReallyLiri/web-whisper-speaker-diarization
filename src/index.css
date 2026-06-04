@@ -23,6 +23,7 @@
 html {
   @apply scrollbar-thin;
   color-scheme: light;
+  overscroll-behavior: none;
 }
 
 @keyframes lim-earphones-tilt {

@@ -4,6 +4,7 @@ import Progress from './components/Progress';
 import MediaInput from './components/MediaInput';
 import Transcript from './components/Transcript';
 import LanguageSelector from './components/LanguageSelector';
+import ModelSelector from './components/ModelSelector';
 
 
 async function hasWebGPU() {
@@ -18,33 +19,57 @@ async function hasWebGPU() {
     }
 }
 
+const STORAGE_KEYS = {
+    language: 'whisper-speaker-diarization.language',
+    model: 'whisper-speaker-diarization.model',
+};
+
+function readStoredValue(key, fallback) {
+    try {
+        return localStorage.getItem(key) ?? fallback;
+    } catch {
+        return fallback;
+    }
+}
+
 function App() {
 
     // Create a reference to the worker object.
     const worker = useRef(null);
-    const hasRequestedModelLoad = useRef(false);
 
     // Model loading and progress
-    const [status, setStatus] = useState('loading');
-    const [loadingMessage, setLoadingMessage] = useState('Loading model...');
+    const [status, setStatus] = useState('ready');
+    const [loadingMessage, setLoadingMessage] = useState('Loading models...');
     const [progressItems, setProgressItems] = useState([]);
+    const [feedback, setFeedback] = useState(null);
 
     const mediaInputRef = useRef(null);
     const [audio, setAudio] = useState(null);
-    const [language, setLanguage] = useState('he');
+    const [language, setLanguage] = useState(() => readStoredValue(STORAGE_KEYS.language, 'he'));
+    const [model, setModel] = useState(() => readStoredValue(STORAGE_KEYS.model, 'base'));
 
     const [result, setResult] = useState(null);
     const [time, setTime] = useState(null);
     const [currentTime, setCurrentTime] = useState(0);
 
     const [device, setDevice] = useState(null);
-    const [, setModelSize] = useState('gpu' in navigator ? 196 : 77); // WebGPU=196MB, WebAssembly=77MB
     useEffect(() => {
         hasWebGPU().then((b) => {
-            setModelSize(b ? 196 : 77);
             setDevice(b ? 'webgpu' : 'wasm');
         });
     }, []);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(STORAGE_KEYS.language, language);
+        } catch {}
+    }, [language]);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(STORAGE_KEYS.model, model);
+        } catch {}
+    }, [model]);
 
     // We use the `useEffect` hook to setup the worker as soon as the `App` component is mounted.
     useEffect(() => {
@@ -87,50 +112,104 @@ function App() {
                     );
                     break;
 
-                case 'loaded':
-                    // Pipeline ready: the worker is ready to accept messages.
-                    setStatus('ready');
+                case 'running':
+                    setProgressItems([]);
+                    setStatus('running');
                     break;
 
                 case 'complete':
                     setResult(e.data.result);
                     setTime(e.data.time);
+                    setProgressItems([]);
+                    setStatus('ready');
+                    break;
+
+                case 'cleared':
+                    setFeedback({
+                        type: 'success',
+                        text: e.data.cacheDeleted ? 'Local models storage cleared.' : 'No local models storage found.',
+                    });
+                    setProgressItems([]);
+                    setStatus('ready');
+                    break;
+
+                case 'error':
+                    setFeedback({
+                        type: 'error',
+                        text: e.data.error || 'An unknown error occurred.',
+                    });
+                    setProgressItems([]);
                     setStatus('ready');
                     break;
             }
         };
 
+        const onWorkerError = (event) => {
+            setFeedback({
+                type: 'error',
+                text: event.message || 'The model worker crashed.',
+            });
+            setProgressItems([]);
+            setStatus('ready');
+        };
+
+        const onMessageError = () => {
+            setFeedback({
+                type: 'error',
+                text: 'The model worker sent an unreadable response.',
+            });
+            setProgressItems([]);
+            setStatus('ready');
+        };
+
         // Attach the callback function as an event listener.
         worker.current.addEventListener('message', onMessageReceived);
+        worker.current.addEventListener('error', onWorkerError);
+        worker.current.addEventListener('messageerror', onMessageError);
 
         // Define a cleanup function for when the component is unmounted.
         return () => {
             worker.current.removeEventListener('message', onMessageReceived);
+            worker.current.removeEventListener('error', onWorkerError);
+            worker.current.removeEventListener('messageerror', onMessageError);
         };
     }, []);
 
-    useEffect(() => {
-        if (!device || !worker.current || hasRequestedModelLoad.current) return;
-
-        hasRequestedModelLoad.current = true;
-        setStatus('loading');
-        worker.current.postMessage({type: 'load', data: {device}});
-    }, [device]);
-
     const handleClick = useCallback(() => {
+        if (!worker.current || !device || audio === null) return;
+
         setResult(null);
         setTime(null);
-        setStatus('running');
+        setProgressItems([]);
+        setFeedback(null);
+        setLoadingMessage('Loading models...');
+        setStatus('loading');
         worker.current.postMessage({
-            type: 'run', data: {audio, language}
+            type: 'run', data: {audio, language, device, model}
         });
-    }, [audio, language]);
+    }, [audio, device, language, model]);
+
+    const handleClearModels = useCallback(() => {
+        if (!worker.current || status !== 'ready') return;
+
+        setFeedback(null);
+        setProgressItems([]);
+        setStatus('clearing');
+        worker.current.postMessage({type: 'clear'});
+    }, [status]);
+
+    const handleModelChange = useCallback((model) => {
+        setModel(model);
+        setResult(null);
+        setTime(null);
+        setFeedback(null);
+    }, []);
 
     return (
         <div className="flex flex-col h-screen mx-auto text-gray-800 bg-white max-w-[600px]">
 
             {status === 'loading' && (
-                <div className="flex justify-center items-center fixed w-screen h-screen bg-black z-10 bg-opacity-[92%] top-0 left-0">
+                <div className="flex justify-center items-center fixed w-screen h-screen bg-black z-20 bg-opacity-[92%] top-0 left-0">
                     <div className="w-[500px]">
                         <p className="text-center mb-1 text-white text-md">{loadingMessage}</p>
                         {progressItems.map(({file, progress, total}, i) => (
@@ -143,20 +222,30 @@ function App() {
                 <div className="flex flex-col items-center mb-2 text-center">
                     <div className="relative mb-2">
                         <h1 className="text-5xl font-bold">Transcription Tool</h1>
-                        <img
-                            src="/lim-sleep.png"
-                            alt=""
-                            aria-hidden="true"
-                            className="absolute right-0 top-0 w-120 translate-x-[50%] -translate-y-[60%] pointer-events-none select-none"
-                        />
+                        {status !== 'running' && (
+                            <img
+                                src="/lim-sleep.png"
+                                alt=""
+                                aria-hidden="true"
+                                className="absolute right-0 top-0 w-120 translate-x-[50%] -translate-y-[60%] pointer-events-none select-none"
+                            />
+                        )}
                     </div>
                     <h2 className="text-xl font-semibold">In-browser automatic speech recognition w/ <br/>word-level timestamps and speaker segmentation</h2>
                 </div>
 
                 <div className="w-full min-h-[220px] flex flex-col justify-center items-center">
                     <div className="flex flex-col w-full m-3 max-w-[520px]">
-                        <span className="text-sm mb-0.5">Language</span>
-                        <LanguageSelector className="border rounded-lg p-1 mb-3" language={language} setLanguage={setLanguage}/>
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                            <label className="flex flex-col">
+                                <span className="text-sm mb-0.5">Language</span>
+                                <LanguageSelector className="border rounded-lg p-1" language={language} setLanguage={setLanguage}/>
+                            </label>
+                            <label className="flex flex-col">
+                                <span className="text-sm mb-0.5">Model</span>
+                                <ModelSelector className="border rounded-lg p-1" model={model} setModel={handleModelChange}/>
+                            </label>
+                        </div>
                         <span className="text-sm mb-0.5">Input audio/video</span>
                         <MediaInput
                             ref={mediaInputRef}
@@ -164,6 +253,7 @@ function App() {
                             className="flex items-center border rounded-md cursor-pointer min-h-[100px] max-h-[500px] overflow-hidden"
                             onInputChange={(audio) => {
                                 setResult(null);
+                                setFeedback(null);
                                 setAudio(audio);
                             }}
                             onTimeUpdate={(time) => setCurrentTime(time)}
@@ -172,13 +262,27 @@ function App() {
 
                     <div className="w-full flex justify-center items-center">
                         <button
-                            className="border px-4 py-2 rounded-lg bg-blue-400 text-white hover:bg-blue-500 disabled:bg-blue-100 disabled:cursor-not-allowed select-none"
+                            className="border px-4 py-2 rounded-lg bg-blue-400 text-white hover:bg-blue-500 disabled:cursor-not-allowed select-none"
                             onClick={handleClick}
-                            disabled={status !== 'ready' || audio === null}
+                            disabled={status === 'running'}
                         >
                             {status === 'running' ? 'Running...' : result ? 'Re-run model' : 'Run model'}
                         </button>
                     </div>
+                    <div className="fixed bottom-4 right-4 z-10">
+                        <button
+                            className="border px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-50 disabled:text-gray-300 disabled:cursor-not-allowed select-none"
+                            onClick={handleClearModels}
+                            disabled={status !== 'ready'}
+                        >
+                            {status === 'clearing' ? 'Clearing...' : 'Clear models storage'}
+                        </button>
+                    </div>
+                    {feedback && (
+                        <p className={`text-sm text-center mt-2 ${feedback.type === 'error' ? 'text-red-700' : 'text-gray-600'}`}>
+                            {feedback.text}
+                        </p>
+                    )}
 
                     {
                         result && time && (
