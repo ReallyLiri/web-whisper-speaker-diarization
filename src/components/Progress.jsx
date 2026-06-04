@@ -6,7 +6,7 @@ function formatBytes(size) {
 export default function Progress({ text, percentage, total }) {
     percentage ??= 0;
     return (
-        <div className="w-full bg-gray-100 text-left rounded-lg overflow-hidden mb-0.5">
+        <div className="w-full bg-gray-100 text-left rounded-lg overflow-hidden mb-0.5" dir="ltr">
             <div className="bg-blue-400 whitespace-nowrap px-1 text-sm" style={{ width: `${percentage}%` }}>
                 {text} ({percentage.toFixed(2)}%{isNaN(total) ? '' : ` of ${formatBytes(total)}`})
             </div>
