@@ -262,7 +262,7 @@ function App() {
 
                     <div className="w-full flex justify-center items-center">
                         <button
-                            className="border px-4 py-2 rounded-lg bg-blue-400 text-white hover:bg-blue-500 disabled:cursor-not-allowed select-none"
+                            className="border px-4 py-2 rounded-lg bg-orange-400 text-white hover:bg-orange-500 disabled:cursor-not-allowed select-none"
                             onClick={handleClick}
                             disabled={status === 'running'}
                         >
@@ -305,6 +305,12 @@ function App() {
                     }
                 </div>
             </div>
+            <a
+                href="https://github.com/ReallyLiri/web-whisper-speaker-diarization"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-gray-400 hover:text-gray-600 text-center py-2"
+            >source code</a>
         </div>
     )
 }
