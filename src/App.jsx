@@ -271,7 +271,7 @@ function App() {
                     </div>
                     <div className="fixed bottom-4 right-4 z-10">
                         <button
-                            className="border px-4 py-2 rounded-lg bg-white text-gray-700 hover:bg-gray-50 disabled:text-gray-300 disabled:cursor-not-allowed select-none"
+                            className="border px-4 py-2 rounded-lg text-xs bg-white text-gray-700 hover:bg-gray-50 disabled:text-gray-300 disabled:cursor-not-allowed select-none"
                             onClick={handleClearModels}
                             disabled={status !== 'ready'}
                         >
