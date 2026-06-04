@@ -176,7 +176,7 @@ function App() {
                             onClick={handleClick}
                             disabled={status !== 'ready' || audio === null}
                         >
-                            {status === 'running' ? 'Running...' : 'Run model'}
+                            {status === 'running' ? 'Running...' : result ? 'Re-run model' : 'Run model'}
                         </button>
                     </div>
 
@@ -195,7 +195,7 @@ function App() {
                                         }}
                                     />
                                 </div>
-                                <p className="text-sm text-gray-600 text-end p-1">Generation time: <span className="text-gray-800 font-semibold">{time.toFixed(2)}ms</span></p>
+                                <p className="text-sm text-gray-600 text-end p-1">Generation time: <span className="text-gray-800 font-semibold">{(time / 1000).toFixed(2)} seconds</span></p>
                             </>
                         )
                     }
