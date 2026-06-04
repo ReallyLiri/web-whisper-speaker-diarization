@@ -141,7 +141,15 @@ function App() {
             )}
             <div className="my-auto">
                 <div className="flex flex-col items-center mb-2 text-center">
-                    <h1 className="text-5xl font-bold mb-2">Whisper Diarization</h1>
+                    <div className="relative mb-2">
+                        <h1 className="text-5xl font-bold">Transcription Tool</h1>
+                        <img
+                            src="/lim-sleep.png"
+                            alt=""
+                            aria-hidden="true"
+                            className="absolute right-0 top-0 w-120 translate-x-[50%] -translate-y-[60%] pointer-events-none select-none"
+                        />
+                    </div>
                     <h2 className="text-xl font-semibold">In-browser automatic speech recognition w/ <br/>word-level timestamps and speaker segmentation</h2>
                 </div>
 
@@ -152,6 +160,7 @@ function App() {
                         <span className="text-sm mb-0.5">Input audio/video</span>
                         <MediaInput
                             ref={mediaInputRef}
+                            isRunning={status === 'running'}
                             className="flex items-center border rounded-md cursor-pointer min-h-[100px] max-h-[500px] overflow-hidden"
                             onInputChange={(audio) => {
                                 setResult(null);

@@ -24,3 +24,22 @@ html {
   @apply scrollbar-thin;
   color-scheme: light;
 }
+
+@keyframes lim-earphones-tilt {
+  0% {
+    transform: rotate(-4deg);
+  }
+
+  50% {
+    transform: rotate(4deg);
+  }
+
+  100% {
+    transform: rotate(-4deg);
+  }
+}
+
+.lim-earphones-tilt {
+  animation: lim-earphones-tilt 1.4s ease-in-out infinite;
+  transform-origin: center bottom;
+}

@@ -2,7 +2,7 @@ import { useState, forwardRef, useRef, useImperativeHandle, useEffect, useCallba
 
 const EXAMPLE_URL = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/hopper.webm';
 
-const MediaInput = forwardRef(({ onInputChange, onTimeUpdate, ...props }, ref) => {
+const MediaInput = forwardRef(({ onInputChange, onTimeUpdate, isRunning = false, ...props }, ref) => {
     // UI states
     const [dragging, setDragging] = useState(false);
     const fileInputRef = useRef(null);
@@ -74,6 +74,11 @@ const MediaInput = forwardRef(({ onInputChange, onTimeUpdate, ...props }, ref) =
     };
 
     const handleClick = (e) => {
+        if (isRunning) {
+            e.stopPropagation();
+            return;
+        }
+
         if (e.target.tagName === 'VIDEO' || e.target.tagName === 'AUDIO') {
             e.preventDefault();
             fileInputRef.current.click();
@@ -159,7 +164,7 @@ const MediaInput = forwardRef(({ onInputChange, onTimeUpdate, ...props }, ref) =
                 <audio
                     ref={audioElement}
                     controls
-                    style={{ display: audioElement.current?.src ? 'block' : 'none' }}
+                    style={{ display: audioElement.current?.src && !isRunning ? 'block' : 'none' }}
                     className='w-full max-h-full'
                 />
             }
@@ -167,12 +172,24 @@ const MediaInput = forwardRef(({ onInputChange, onTimeUpdate, ...props }, ref) =
                 <video
                     ref={videoElement}
                     controls
-                    style={{ display: videoElement.current?.src ? 'block' : 'none' }}
+                    style={{ display: videoElement.current?.src && !isRunning ? 'block' : 'none' }}
                     className='w-full max-h-full'
                 />
             }
             {
-                !audioElement.current?.src && !videoElement.current?.src && (
+                isRunning && (
+                    <div className="w-full h-[250px] flex items-center justify-center">
+                        <img
+                            src="/lim-earphones.jpeg"
+                            alt=""
+                            aria-hidden="true"
+                            className="lim-earphones-tilt max-h-[220px] max-w-[80%] rounded object-contain pointer-events-none select-none"
+                        />
+                    </div>
+                )
+            }
+            {
+                !isRunning && !audioElement.current?.src && !videoElement.current?.src && (
                     <div className="w-full flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-md h-[250px]"
                         style={{ borderColor: dragging ? 'blue' : 'lightgray' }}
                     >
