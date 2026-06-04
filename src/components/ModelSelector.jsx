@@ -1,7 +1,7 @@
 const MODELS = {
-    base: 'Faster',
-    small: 'Medium (but smarter)',
-    medium: 'Slower (but smartest)',
+    base: 'מהיר יותר',
+    small: 'בינוני (אך חכם יותר)',
+    medium: 'איטי יותר (אך החכם ביותר)',
 };
 
 function ModelSelector({ model, setModel, ...props }) {

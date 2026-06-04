@@ -39,7 +39,7 @@ function App() {
 
     // Model loading and progress
     const [status, setStatus] = useState('ready');
-    const [loadingMessage, setLoadingMessage] = useState('Loading models...');
+    const [loadingMessage, setLoadingMessage] = useState('טוענת מודלים...');
     const [progressItems, setProgressItems] = useState([]);
     const [feedback, setFeedback] = useState(null);
 
@@ -86,7 +86,7 @@ function App() {
                 case 'loading':
                     // Model file start load: add a new progress item to the list.
                     setStatus('loading');
-                    setLoadingMessage(e.data.data);
+                    setLoadingMessage(e.data.data ?? 'טוענת מודלים...');
                     break;
 
                 case 'initiate':
@@ -127,7 +127,7 @@ function App() {
                 case 'cleared':
                     setFeedback({
                         type: 'success',
-                        text: e.data.cacheDeleted ? 'Local models storage cleared.' : 'No local models storage found.',
+                        text: e.data.cacheDeleted ? 'אחסון מודלים מקומי נוקה.' : 'לא נמצא אחסון מודלים מקומי.',
                     });
                     setProgressItems([]);
                     setStatus('ready');
@@ -136,7 +136,7 @@ function App() {
                 case 'error':
                     setFeedback({
                         type: 'error',
-                        text: e.data.error || 'An unknown error occurred.',
+                        text: e.data.error || 'אירעה שגיאה לא ידועה.',
                     });
                     setProgressItems([]);
                     setStatus('ready');
@@ -147,7 +147,7 @@ function App() {
         const onWorkerError = (event) => {
             setFeedback({
                 type: 'error',
-                text: event.message || 'The model worker crashed.',
+                text: event.message || 'עובד המודל קרס.',
             });
             setProgressItems([]);
             setStatus('ready');
@@ -156,7 +156,7 @@ function App() {
         const onMessageError = () => {
             setFeedback({
                 type: 'error',
-                text: 'The model worker sent an unreadable response.',
+                text: 'עובד המודל שלח תגובה בלתי קריאה.',
             });
             setProgressItems([]);
             setStatus('ready');
@@ -182,7 +182,7 @@ function App() {
         setTime(null);
         setProgressItems([]);
         setFeedback(null);
-        setLoadingMessage('Loading models...');
+        setLoadingMessage('טוענת מודלים...');
         setStatus('loading');
         worker.current.postMessage({
             type: 'run', data: {audio, language, device, model}
@@ -206,7 +206,7 @@ function App() {
     }, []);
 
     return (
-        <div className="flex flex-col h-screen mx-auto text-gray-800 bg-white max-w-[600px]">
+        <div dir="rtl" className="flex flex-col h-screen mx-auto text-gray-800 bg-white max-w-[600px]">
 
             {status === 'loading' && (
                 <div className="flex justify-center items-center fixed w-screen h-screen bg-black z-20 bg-opacity-[92%] top-0 left-0">
@@ -221,7 +221,7 @@ function App() {
             <div className="my-auto">
                 <div className="flex flex-col items-center mb-2 text-center">
                     <div className="relative mb-2">
-                        <h1 className="text-5xl font-bold">Transcription Tool</h1>
+                        <h1 className="text-5xl font-bold">תמלולוטומטי</h1>
                         {status !== 'running' && (
                             <img
                                 src="/lim-sleep.png"
@@ -231,22 +231,22 @@ function App() {
                             />
                         )}
                     </div>
-                    <h2 className="text-xl font-semibold">In-browser automatic speech recognition w/ <br/>word-level timestamps and speaker segmentation</h2>
+                    <h2 className="text-xl font-semibold">זיהוי דיבור אוטומטי בדפדפן עם חותמות זמן ברמת מילה וזיהוי דוברים</h2>
                 </div>
 
                 <div className="w-full min-h-[220px] flex flex-col justify-center items-center">
                     <div className="flex flex-col w-full m-3 max-w-[520px]">
                         <div className="grid grid-cols-2 gap-3 mb-3">
                             <label className="flex flex-col">
-                                <span className="text-sm mb-0.5">Language</span>
+                                <span className="text-sm mb-0.5">שפה</span>
                                 <LanguageSelector className="border rounded-lg p-1" language={language} setLanguage={setLanguage}/>
                             </label>
                             <label className="flex flex-col">
-                                <span className="text-sm mb-0.5">Model</span>
+                                <span className="text-sm mb-0.5">מודל</span>
                                 <ModelSelector className="border rounded-lg p-1" model={model} setModel={handleModelChange}/>
                             </label>
                         </div>
-                        <span className="text-sm mb-0.5">Input audio/video</span>
+                        <span className="text-sm mb-0.5">קובץ שמע/וידאו</span>
                         <MediaInput
                             ref={mediaInputRef}
                             isRunning={status === 'running'}
@@ -266,7 +266,7 @@ function App() {
                             onClick={handleClick}
                             disabled={status === 'running'}
                         >
-                            {status === 'running' ? 'Running...' : result ? 'Re-run model' : 'Run model'}
+                            {status === 'running' ? 'מעבדת...' : result ? 'הרצה שוב' : 'הרצת מודל'}
                         </button>
                     </div>
                     <div className="fixed bottom-4 right-4 z-10">
@@ -275,7 +275,7 @@ function App() {
                             onClick={handleClearModels}
                             disabled={status !== 'ready'}
                         >
-                            {status === 'clearing' ? 'Clearing...' : 'Clear models storage'}
+                            {status === 'clearing' ? 'מוחקת...' : 'ניקוי אחסון מודלים'}
                         </button>
                     </div>
                     {feedback && (
@@ -299,7 +299,7 @@ function App() {
                                         }}
                                     />
                                 </div>
-                                <p className="text-sm text-gray-600 text-end p-1">Generation time: <span className="text-gray-800 font-semibold">{(time / 1000).toFixed(2)} seconds</span></p>
+                                <p className="text-sm text-gray-600 text-end p-1">זמן עיבוד: <span className="text-gray-800 font-semibold">{(time / 1000).toFixed(2)} שניות</span></p>
                             </>
                         )
                     }
@@ -310,7 +310,7 @@ function App() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-gray-400 hover:text-gray-600 text-center py-2"
-            >source code</a>
+            >קוד מקור</a>
         </div>
     )
 }

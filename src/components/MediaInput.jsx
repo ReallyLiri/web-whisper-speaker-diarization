@@ -191,7 +191,7 @@ const MediaInput = forwardRef(({ onInputChange, onTimeUpdate, isRunning = false,
                     <div className="w-full flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-md h-[250px]"
                         style={{ borderColor: dragging ? 'blue' : 'lightgray' }}
                     >
-                        <span className="text-gray-600 text-center"><u>Drag & drop</u> or <u>click</u> to select media</span>
+                        <span className="text-gray-600 text-center"><u>גררי ושחררי</u> או <u>לחצי</u> לבחירת קובץ מדיה</span>
                     </div>
                 )
             }

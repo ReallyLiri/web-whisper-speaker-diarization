@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 
-const Chunk = ({ chunk, currentTime, onClick, ...props }) => {
+const Chunk = ({chunk, currentTime, onClick, ...props}) => {
     const spanRef = useRef(null);
-    const { text, timestamp } = chunk;
+    const {text, timestamp} = chunk;
     const [start, end] = timestamp;
 
     const bolded = start <= currentTime && currentTime < end;
@@ -34,7 +34,7 @@ const Chunk = ({ chunk, currentTime, onClick, ...props }) => {
     )
 }
 
-const Transcript = ({ transcript, segments, currentTime, setCurrentTime, ...props }) => {
+const Transcript = ({transcript, segments, currentTime, setCurrentTime, ...props}) => {
     const jsonTranscript = useMemo(() => {
         return JSON.stringify({
             ...transcript,
@@ -51,7 +51,7 @@ const Transcript = ({ transcript, segments, currentTime, setCurrentTime, ...prop
 
         const result = [];
         for (const segment of segments) {
-            const { label, end } = segment;
+            const {label, end} = segment;
             if (label === 'NO_SPEAKER') continue;
 
             // Collect all words within this segment
@@ -77,7 +77,7 @@ const Transcript = ({ transcript, segments, currentTime, setCurrentTime, ...prop
 
     const [copied, setCopied] = useState(false);
 
-    const buildText = () => postProcessedTranscript.map(({ label, chunks }) => {
+    const buildText = () => postProcessedTranscript.map(({label, chunks}) => {
         const line = chunks.map(c => c.text).join('').trim();
         return `${label}:\n${line}`;
     }).join('\n\n');
@@ -91,7 +91,7 @@ const Transcript = ({ transcript, segments, currentTime, setCurrentTime, ...prop
 
     const downloadTranscript = () => {
         const text = buildText();
-        const blob = new Blob([text], { type: 'text/plain' });
+        const blob = new Blob([text], {type: 'text/plain'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -103,7 +103,7 @@ const Transcript = ({ transcript, segments, currentTime, setCurrentTime, ...prop
     return (<>
         <div {...props}>
             {
-                postProcessedTranscript.map(({ label, start, end, chunks }, i) => (
+                postProcessedTranscript.map(({label, start, end, chunks}, i) => (
                     <div className="border-t py-2" key={i}>
                         <div className="flex justify-between">
                             <label className="text-xs font-medium">{label}</label>
@@ -129,19 +129,20 @@ const Transcript = ({ transcript, segments, currentTime, setCurrentTime, ...prop
                 className="flex items-center border px-2 py-1 rounded-lg bg-green-400 text-white hover:bg-green-500"
                 onClick={downloadTranscript}
             >
+                הורדת תמלול
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6 mr-1">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
                 </svg>
-                Download transcript
             </button>
             <button
                 className="flex items-center border px-2 py-1 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200"
                 onClick={copyToClipboard}
             >
+                {copied ? 'הועתק!' : 'העתקת תמלול'}
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6 mr-1">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
+                    <path strokeLinecap="round" strokeLinejoin="round"
+                          d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184"/>
                 </svg>
-                {copied ? 'Copied!' : 'Copy to clipboard'}
             </button>
         </div>
     </>)
